@@ -1,120 +1,91 @@
 "use strict";
 const path = require("path");
-
 function resolve(dir) {
   return path.join(__dirname, dir);
 }
 
-const name = "wechat demo"; // page title
-const mockPort = 3000; // mock server port
-
-module.exports = {
-  // 修改默认的入口
-  pages: {
-    index: {
-      entry: "src/main.js",
-      template: "public/index.html",
-      filename: "index.html"
-    }
+const name = "vue mobile template"; // page title
+const port = 9018; // dev port
+const externals = {
+  vue: "Vue",
+  "vue-router": "VueRouter",
+  vuex: "Vuex",
+  vant: "vant",
+  axios: "axios"
+}
+// cdn
+const cdn = {
+  // 开发环境
+  dev: {
+    css: [],
+    js: [
+      "https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.4.4/polyfill.js"
+    ]
   },
-  lintOnSave: true, // 关闭eslint规范
+  // 生产环境
+  build: {
+    css: ["https://cdn.jsdelivr.net/npm/vant@beta/lib/index.css"],
+    js: [
+      "https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/7.4.4/polyfill.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/vue-router/3.0.6/vue-router.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/axios/0.18.0/axios.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/vuex/3.1.1/vuex.min.js",
+      "https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js",
+      "https://cdn.jsdelivr.net/npm/vant@beta/lib/vant.min.js"
+    ]
+  }
+}
+module.exports = {
+  publicPath: process.env.NODE_ENV === "development" ? "/" : "/app/", // 需要区分生产环境和开发环境，不然build会报错
+  outputDir: "dist",
+  assetsDir: "static",
+  lintOnSave: process.env.NODE_ENV === "development",
+  productionSourceMap: false,
   devServer: {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers":
-        "X-Requested-With, content-type, Authorization"
-    },
+    port: port,
     open: true,
-    hot: true,
     overlay: {
       warnings: false,
       errors: true
-    },
-    proxy: {
-      [process.env.VUE_APP_BASE_API]: {
-        changeOrigin: true, //开启代理：在本地会创建一个虚拟服务端，然后发送请求的数据，并同时接收请求的数据，这样服务端和服务端进行数据的交互就不会有跨域问题
-        target: `http://localhost:${mockPort}`,
-        ws: true, // 是否启用websocket
-        pathRewrite: {
-          ["^" + process.env.VUE_APP_BASE_API]: ""
-        }
-      }
     }
   },
-  filenameHashing: true,
-  css: {
-    loaderOptions: {
-      css: {}
-      // sass: {
-      //   data: "@import "@styles/skin.scss""
-      // },
+
+  configureWebpack: config => {
+    // 为生产环境修改配置...
+    if (process.env.NODE_ENV === "production") {
+      // externals里的模块不打包
+      Object.assign(config, {
+        name: name,
+        externals: externals
+      });
     }
-  },
-  configureWebpack: {
-    // provide the app"s title in webpack"s name field, so that
-    // it can be accessed in index.html to inject the correct title.
-    name: name,
-    resolve: {
-      alias: {
-        "@": resolve("src"),
-        "~": resolve("packages")
-      }
+    // 为开发环境修改配置...
+    if (process.env.NODE_ENV === "development") {
+      console.log("2222");
     }
   },
   chainWebpack(config) {
     config.plugins.delete("preload"); // TODO: need test
     config.plugins.delete("prefetch"); // TODO: need test
-
-    // set svg-sprite-loader
-    config.module
-      .rule("svg")
-      .exclude.add(resolve("src/icons"))
-      .end();
-    config.module
-      .rule("icons")
-      .test(/\.svg$/)
-      .include.add(resolve("src/icons"))
-      .end()
-      .use("svg-sprite-loader")
-      .loader("svg-sprite-loader")
-      .options({
-        symbolId: "icon-[name]"
-      })
-      .end();
-
-    // lib目录是组件库最终打包好存放的地方，不需要eslint检查
-    // src/docs是存放md文档的地方，也不需要eslint检查
-    config.module
-      .rule("eslint")
-      .exclude.add(path.resolve("lib"))
-      .end()
-      .exclude.add(path.resolve("src/docs"))
-      .end();
-    // packages和src目录需要加入编译
-    config.module
-      .rule("js")
-      .include.add(/packages/)
-      .end()
-      .include.add(/src/)
-      .end()
-      .use("babel")
-      .loader("babel-loader")
-      .tap(options => {
-        // 修改它的选项...
-        return options;
-      });
-
-    config.module
-      .rule("images")
-      .test(/\.(png|jpg|gif)$/)
-      .use("url-loader")
-      .loader("url-loader")
-      .options({
-        name: "images/[name].[ext]",
-        limit: 1000
-      })
-      .end();
+    // alias
+    config.resolve.alias
+      .set("@", resolve("src"))
+      .set("assets", resolve("src/assets"))
+      .set("views", resolve("src/views"))
+      .set("components", resolve("src/components"));
+    /**
+     * 添加CDN参数到htmlWebpackPlugin配置中， 详见public/index.html 修改
+     */
+    config.plugin("html").tap(args => {
+      if (process.env.NODE_ENV === "production") {
+        args[0].cdn = cdn.build;
+      }
+      if (process.env.NODE_ENV === "development") {
+        args[0].cdn = cdn.dev;
+      }
+      return args;
+    });
 
     // set preserveWhitespace
     config.module
@@ -153,11 +124,11 @@ module.exports = {
             priority: 10,
             chunks: "initial" // only package third parties that are initially dependent
           },
-          elementUI: {
-            name: "chunk-elementUI", // split elementUI into a single package
-            priority: 20, // the weight needs to be larger than libs and app or it will be packaged into libs or app
-            test: /[\\/]node_modules[\\/]_?element-ui(.*)/ // in order to adapt to cnpm
-          },
+          // elementUI: {
+          //   name: "chunk-elementUI", // split elementUI into a single package
+          //   priority: 20, // the weight needs to be larger than libs and app or it will be packaged into libs or app
+          //   test: /[\\/]node_modules[\\/]_?element-ui(.*)/ // in order to adapt to cnpm
+          // },
           commons: {
             name: "chunk-commons",
             test: resolve("src/components"), // can customize your rules
