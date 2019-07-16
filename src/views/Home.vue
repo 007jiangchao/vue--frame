@@ -3,6 +3,7 @@
     <img alt="Vue logo" src="../assets/logo.png" />
     <Button type="primary">1111</Button>
     <div class="abs"></div>
+    <img src="./1.jpg" alt="图片" />
   </div>
 </template>
 
@@ -12,6 +13,9 @@ export default {
   name: "home",
   components: {
     Button
+  },
+  mounted() {
+    this.$axios.get();
   }
 };
 </script>

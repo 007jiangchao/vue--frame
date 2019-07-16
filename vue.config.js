@@ -12,7 +12,7 @@ const externals = {
   vuex: "Vuex",
   vant: "vant",
   axios: "axios"
-}
+};
 // cdn
 const cdn = {
   // 开发环境
@@ -35,9 +35,9 @@ const cdn = {
       "https://cdn.jsdelivr.net/npm/vant@beta/lib/vant.min.js"
     ]
   }
-}
+};
 module.exports = {
-  publicPath: process.env.NODE_ENV === "development" ? "/" : "/app/", // 需要区分生产环境和开发环境，不然build会报错
+  publicPath: process.env.NODE_ENV === "development" ? "/" : "./", // 需要区分生产环境和开发环境，不然build会报错
   outputDir: "dist",
   assetsDir: "static",
   lintOnSave: process.env.NODE_ENV === "development",
@@ -62,7 +62,7 @@ module.exports = {
     }
     // 为开发环境修改配置...
     if (process.env.NODE_ENV === "development") {
-      console.log("2222");
+      console.log("开发环境");
     }
   },
   chainWebpack(config) {
