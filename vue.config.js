@@ -43,14 +43,25 @@ module.exports = {
   lintOnSave: process.env.NODE_ENV === "development",
   productionSourceMap: false,
   devServer: {
-    port: port,
     open: true,
+    host: "0.0.0.0", // 允许外部ip访问
+    port: port, // 端口
+    https: false, // 启用https
     overlay: {
-      warnings: false,
+      warnings: true,
       errors: true
-    }
+    }, // 错误、警告在页面弹出
+    proxy: {
+      "/api": {
+        target: "http://www.baidu.com/api",
+        changeOrigin: true, // 允许websockets跨域
+        // ws: true,
+        pathRewrite: {
+          "^/api": ""
+        }
+      }
+    } // 代理转发配置，用于调试环境
   },
-
   configureWebpack: config => {
     // 为生产环境修改配置...
     if (process.env.NODE_ENV === "production") {
