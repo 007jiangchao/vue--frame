@@ -2,7 +2,9 @@
   <div class="home">
     <img alt="Vue logo" src="../assets/logo.png" />
     <Button type="primary">1111</Button>
-    <div class="abs"></div>
+    <div class="abs">
+      <div class="aa"></div>
+    </div>
     <img src="./1.jpg" alt="图片" />
   </div>
 </template>
@@ -21,8 +23,12 @@ export default {
 </script>
 <style scoped lang="less">
 .abs {
-  width: 20px;
-  height: 20px;
+  width: 200px;
+  height: 200px;
   background-color: red;
+  display: flex;
+  .aa {
+    flex: 1;
+  }
 }
 </style>
